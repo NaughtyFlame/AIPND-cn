@@ -37,7 +37,7 @@
 # 
 # 提示：记得使用 notebook 中的魔法指令 `%matplotlib inline`，否则会导致你接下来无法打印出图像。
 
-# In[349]:
+# In[10]:
 
 
 import numpy as np
@@ -62,7 +62,7 @@ movie_data = pd.read_csv('./tmdb-movies.csv')
 # 
 # 
 
-# In[350]:
+# In[4]:
 
 
 #print(movie_data.head())
@@ -82,18 +82,20 @@ movie_data = pd.read_csv('./tmdb-movies.csv')
 # 
 # 任务：使用适当的方法来清理空值，并将得到的数据保存。
 
-# In[351]:
+# In[14]:
 
 
 #movie_data = movie_data.fillna(0)
 movie_data = movie_data.dropna(axis=0, how='any')
-
-for col in movie_data.columns:
-    coltype = movie_data[col].dtypes
-    if coltype == 'int64' or coltype == 'float64':
-        movie_data = movie_data[movie_data[col] != 0]
+# display(movie_data)
+movie_data.info()
+# 注释，过于激进的数据过滤
+# for col in movie_data.columns:
+#     coltype = movie_data[col].dtypes
+#     if coltype == 'int64' or coltype == 'float64':
+#         movie_data = movie_data[movie_data[col] != 0]
         
-movie_data = movie_data.reset_index(drop=True)
+# movie_data = movie_data.reset_index(drop=True)
 #print(movie_data)
 
 
@@ -118,7 +120,7 @@ movie_data = movie_data.reset_index(drop=True)
 # 
 # 要求：每一个语句只能用一行代码实现。
 
-# In[83]:
+# In[15]:
 
 
 #print(movie_data[['id', 'popularity', 'budget', 'runtime', 'vote_average']])
@@ -139,7 +141,7 @@ print(movie_data.loc[[50, 60], ['popularity']])
 # 
 # 要求：请使用 Logical Indexing实现。
 
-# In[92]:
+# In[7]:
 
 
 #print(movie_data[movie_data['popularity'] > 5])
@@ -155,11 +157,14 @@ print(movie_data.loc[[50, 60], ['popularity']])
 # 
 # 要求：使用 `Groupby` 命令实现。
 
-# In[354]:
+# In[18]:
 
 
 #print(movie_data['revenue'].groupby(movie_data['release_year']).agg('mean'))
 #print(movie_data['popularity'].groupby(movie_data['director']).agg('mean').sort_values(ascending=False))
+
+#betten
+display(movie_data.groupby('release_year')['revenue'].agg('mean'))
 
 
 # ---
@@ -181,13 +186,13 @@ print(movie_data.loc[[50, 60], ['popularity']])
 
 # **任务3.1：**对 `popularity` 最高的20名电影绘制其 `popularity` 值。
 
-# In[355]:
+# In[17]:
 
 
-popularity = movie_data.sort_values(by='popularity', ascending=False)[0: 20].reset_index(drop=True)
+get_ipython().run_line_magic('matplotlib', 'inline')
+movie_data_sort_by_popularity = movie_data.sort_values(by='popularity', ascending=False)[0: 20].reset_index(drop=True)
 #print(popularity)
-bin_edges = np.arange(5, popularity['popularity'].max() + 1, 1)
-plt.hist(data = popularity, x = 'popularity', bins = bin_edges)
+movie_data_sort_by_popularity.plot.bar(x = 'original_title', y = 'popularity')
 
 
 # ---
@@ -209,27 +214,46 @@ plt.plot(y_means.index, y_means)
 # 
 # **[选做]任务3.3：**选择最多产的10位导演（电影数量最多的），绘制他们排行前3的三部电影的票房情况，并简要进行分析。
 
-# In[357]:
+# In[74]:
 
 
-director = movie_data.groupby(movie_data['director']).agg('size').sort_values(ascending=False)[0: 10]
+# director = movie_data.groupby(movie_data['director']).agg('size').sort_values(ascending=False)[0: 10]
 
-def getDirectorTop3():
-    directors_movie_data = pd.DataFrame(columns=movie_data.columns)
-    for dirs in director.index:
-        director_movie_data = movie_data[ movie_data['director'] == dirs ].sort_values(by='budget_adj', ascending=False)[0: 3]
-        directors_movie_data = directors_movie_data.append(director_movie_data)
-    return directors_movie_data
+# def getDirectorTop3():
+#     directors_movie_data = pd.DataFrame(columns=movie_data.columns)
+#     for dirs in director.index:
+#         director_movie_data = movie_data[ movie_data['director'] == dirs ].sort_values(by='revenue_adj', ascending=False)[0: 3]
+#         directors_movie_data = directors_movie_data.append(director_movie_data)
+#     return directors_movie_data
     
-directors_movie_data = getDirectorTop3()
-sb.countplot(y = 'director', hue = 'original_title', data = directors_movie_data)
+# directors_movie_data = getDirectorTop3()
+# sb.countplot(y = 'director', hue = 'original_title', data = directors_movie_data)
+
+#new
+movie_data_split = movie_data['director'].str.split('|', expand=True).stack() .reset_index(level=0).set_index('level_0') .rename(columns={0:'director'}).join(movie_data.drop('director', axis=1))
+
+directors_top10 = movie_data_split['director'].value_counts().nlargest(10).index
+
+top10_data = movie_data_split[movie_data_split['director'].isin(directors_top10)].set_index('original_title')
+target_data = top10_data.groupby('director').agg({'revenue': lambda x: x.nlargest(3).to_dict()})
+
+#display(target_data['revenue']['Clint Eastwood'])
+
+for _director in target_data['revenue'].index:
+    director3_movie_data = pd.DataFrame.from_dict(target_data['revenue'][_director], orient='index')
+    director3_movie_data.rename(columns={0: 'revenue'}, inplace=True)
+    director3_movie_data.plot.bar(title= _director + "'s Top3 movies revenue")
+#a = pd.DataFrame.from_dict(target_data['revenue']['Clint Eastwood'], orient='index')
+#a.rename(columns={0: 'revenue'}, inplace=True)
+#display(a)
+#a.plot.bar(title="director movies revenue")
 
 
 # ---
 # 
 # **[选做]任务3.4：**分析1968年~2015年六月电影的数量的变化。
 
-# In[358]:
+# In[32]:
 
 
 sixmonth_movie_data = movie_data[ movie_data['release_year'].between(1968, 2015) ]
@@ -243,36 +267,49 @@ plt.ylabel("Count")
 plt.plot(y_means.index, y_means)
 #print(sixmonth_movie_data)
 
+#new
+inJune = movie_data['release_date'].str.startswith('6')
+inYears = movie_data['release_year'].between(1968, 2015)
+movie_data[inJune&inYears]['release_year'].value_counts().sort_index().plot(title='Circulation in June Over Years')
+plt.ylabel('Circulation')
+
 
 # ---
 # 
 # **[选做]任务3.5：**分析1968年~2015年六月电影 `Comedy` 和 `Drama` 两类电影的数量的变化。
 
-# In[359]:
+# In[37]:
 
 
-import re
-def isComedyADrama(x):
-    if (re.search('Comedy|Drama', x, re.M|re.I) is None):
-        return False
-    return True
-sixmonth_comedyAdrama_movie_data = sixmonth_movie_data[sixmonth_movie_data['genres'].apply(lambda x: isComedyADrama(x))]
+# import re
+# def isComedyADrama(x):
+#     if (re.search('Comedy|Drama', x, re.M|re.I) is None):
+#         return False
+#     return True
+# sixmonth_comedyAdrama_movie_data = sixmonth_movie_data[sixmonth_movie_data['genres'].apply(lambda x: isComedyADrama(x))]
 
-def getCatetory(x):
-    isComedy = not re.search('Comedy', x) is None
-    isDrama = not re.search('Drama', x) is None
-    if isDrama and isComedy:
-        return 'Comedy|Drama'
-    if isComedy:
-        return 'Comedy'
-    if isDrama:
-        return 'Drama'
+# def getCatetory(x):
+#     isComedy = not re.search('Comedy', x) is None
+#     isDrama = not re.search('Drama', x) is None
+#     if isDrama and isComedy:
+#         return 'Comedy|Drama'
+#     if isComedy:
+#         return 'Comedy'
+#     if isDrama:
+#         return 'Drama'
 
-# 这块warning按照文档提示修改过了，还是有。。。求助。
-#sixmonth_comedyAdrama_movie_data['category'] = sixmonth_comedyAdrama_movie_data['genres'].apply(lambda x: getCatetory(x))
-sixmonth_comedyAdrama_movie_data.loc[:, 'category'] = sixmonth_comedyAdrama_movie_data['genres'].apply(lambda x: getCatetory(x))
-#print(sixmonth_comedyAdrama_movie_data)
-sb.countplot(y = 'release_year', hue = 'category', data = sixmonth_comedyAdrama_movie_data)
+# # 这块warning按照文档提示修改过了，还是有。。。求助。
+# #sixmonth_comedyAdrama_movie_data['category'] = sixmonth_comedyAdrama_movie_data['genres'].apply(lambda x: getCatetory(x))
+# sixmonth_comedyAdrama_movie_data.loc[:, 'category'] = sixmonth_comedyAdrama_movie_data['genres'].apply(lambda x: getCatetory(x))
+# #print(sixmonth_comedyAdrama_movie_data)
+# sb.countplot(y = 'release_year', hue = 'category', data = sixmonth_comedyAdrama_movie_data)
+
+# new
+
+comedy = movie_data['genres'].str.contains('Comedy')
+drama = movie_data['genres'].str.contains('Drama')
+movie_data[inJune&inYears&comedy&drama]['release_year'].value_counts().sort_index().plot(title='Circulation of Comedy & Drama in June Over Years')
+plt.ylabel('Circulation')
 
 
 # > 注意: 当你写完了所有的代码，并且回答了所有的问题。你就可以把你的 iPython Notebook 导出成 HTML 文件。你可以在菜单栏，这样导出**File -> Download as -> HTML (.html)、Python (.py)** 把导出的 HTML、python文件 和这个 iPython notebook 一起提交给审阅者。
