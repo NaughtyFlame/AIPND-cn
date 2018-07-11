@@ -37,7 +37,7 @@
 # 
 # 提示：记得使用 notebook 中的魔法指令 `%matplotlib inline`，否则会导致你接下来无法打印出图像。
 
-# In[10]:
+# In[22]:
 
 
 import numpy as np
@@ -62,7 +62,7 @@ movie_data = pd.read_csv('./tmdb-movies.csv')
 # 
 # 
 
-# In[4]:
+# In[20]:
 
 
 #print(movie_data.head())
@@ -82,11 +82,15 @@ movie_data = pd.read_csv('./tmdb-movies.csv')
 # 
 # 任务：使用适当的方法来清理空值，并将得到的数据保存。
 
-# In[14]:
+# In[23]:
 
 
 #movie_data = movie_data.fillna(0)
-movie_data = movie_data.dropna(axis=0, how='any')
+
+# new，根据后面会使用到的col，针对性的清除数据。如果使用到的col非NaN条数不等于正常数据大小，则判定其需要处理。
+# 非常感谢老师辛苦的审阅！
+movie_data = movie_data.dropna(subset=['director', 'genres'])
+
 # display(movie_data)
 movie_data.info()
 # 注释，过于激进的数据过滤
@@ -120,7 +124,7 @@ movie_data.info()
 # 
 # 要求：每一个语句只能用一行代码实现。
 
-# In[15]:
+# In[10]:
 
 
 #print(movie_data[['id', 'popularity', 'budget', 'runtime', 'vote_average']])
@@ -141,7 +145,7 @@ print(movie_data.loc[[50, 60], ['popularity']])
 # 
 # 要求：请使用 Logical Indexing实现。
 
-# In[7]:
+# In[11]:
 
 
 #print(movie_data[movie_data['popularity'] > 5])
@@ -157,7 +161,7 @@ print(movie_data.loc[[50, 60], ['popularity']])
 # 
 # 要求：使用 `Groupby` 命令实现。
 
-# In[18]:
+# In[12]:
 
 
 #print(movie_data['revenue'].groupby(movie_data['release_year']).agg('mean'))
@@ -186,7 +190,7 @@ display(movie_data.groupby('release_year')['revenue'].agg('mean'))
 
 # **任务3.1：**对 `popularity` 最高的20名电影绘制其 `popularity` 值。
 
-# In[17]:
+# In[13]:
 
 
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -198,7 +202,7 @@ movie_data_sort_by_popularity.plot.bar(x = 'original_title', y = 'popularity')
 # ---
 # **任务3.2：**分析电影净利润（票房-成本）随着年份变化的情况，并简单进行分析。
 
-# In[356]:
+# In[14]:
 
 
 movie_data['profit'] = movie_data['revenue_adj'] - movie_data['budget_adj']
@@ -214,7 +218,7 @@ plt.plot(y_means.index, y_means)
 # 
 # **[选做]任务3.3：**选择最多产的10位导演（电影数量最多的），绘制他们排行前3的三部电影的票房情况，并简要进行分析。
 
-# In[74]:
+# In[15]:
 
 
 # director = movie_data.groupby(movie_data['director']).agg('size').sort_values(ascending=False)[0: 10]
@@ -253,7 +257,7 @@ for _director in target_data['revenue'].index:
 # 
 # **[选做]任务3.4：**分析1968年~2015年六月电影的数量的变化。
 
-# In[32]:
+# In[16]:
 
 
 sixmonth_movie_data = movie_data[ movie_data['release_year'].between(1968, 2015) ]
@@ -278,7 +282,7 @@ plt.ylabel('Circulation')
 # 
 # **[选做]任务3.5：**分析1968年~2015年六月电影 `Comedy` 和 `Drama` 两类电影的数量的变化。
 
-# In[37]:
+# In[17]:
 
 
 # import re
