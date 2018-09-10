@@ -45,7 +45,7 @@ def getDatasets(dirpath):
     data_transforms = {
         'train': transforms.Compose([transforms.RandomRotation(30),
                                      transforms.Resize(256),
-                                     transforms.CenterCrop(224),
+                                     transforms.RandomResizedCrop(224),
                                      transforms.RandomHorizontalFlip(),
                                      transforms.ToTensor(),
                                      transforms.Normalize([0.485, 0.456, 0.406],

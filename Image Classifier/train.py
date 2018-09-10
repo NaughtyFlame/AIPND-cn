@@ -67,7 +67,7 @@ def main(args):
                 model.eval()
                 accuracy = 0
                 test_loss = 0
-                for ii, (images, labels) in enumerate(dataloaders['test']):
+                for ii, (images, labels) in enumerate(dataloaders['valid']):
                     images, labels = Variable(images, volatile=True), Variable(labels, volatile=True)
 
                     if cuda:
@@ -83,8 +83,8 @@ def main(args):
                 print("Epoch: {}/{}.. ".format(e+1, epochs),
                       "Training Loss: {:.3f}.. ".format(running_loss/print_every),
                       "Test Loss: {:.3f}.. ".format(
-                          test_loss/len(dataloaders['test'])),
-                      "Test Accuracy: {:.3f}".format(accuracy/len(dataloaders['test'])))
+                          test_loss/len(dataloaders['valid'])),
+                      "Test Accuracy: {:.3f}".format(accuracy/len(dataloaders['valid'])))
 
             running_loss = 0
             model.train()
